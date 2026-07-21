@@ -37,6 +37,26 @@ jobs:
     - name: Check publish warnings
       run: dart pub publish --dry-run
 
+  browser-test:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Setup Dart
+      uses: dart-lang/setup-dart@v1
+      with:
+        sdk: 'stable'
+
+    - name: Install dependencies
+      run: dart pub get
+
+    - name: Run focused Chrome JavaScript tests
+      run: dart test --platform chrome test/binary_utils_test.dart
+
+    - name: Run focused Chrome WebAssembly tests
+      run: dart test --platform chrome --compiler dart2wasm test/binary_utils_test.dart
+
   coverage:
     runs-on: ubuntu-latest
     

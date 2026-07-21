@@ -44,9 +44,14 @@ class _ByteStream {
       case 6:
       case 7:
         {
-          final result = _byteData.getInt64(position, Endian.little);
-          position += 8;
-          return result;
+          try {
+            final result = _decodeSignedInt64(position);
+            position += 8;
+            return result;
+          } catch (_) {
+            position--;
+            rethrow;
+          }
         }
       case 3:
         return readByte() - 256;
@@ -77,6 +82,19 @@ class _ByteStream {
       default:
         throw FormatException("Invalid number wire type: $wire");
     }
+  }
+
+  int _decodeSignedInt64(int offset) {
+    final low = _byteData.getUint32(offset, Endian.little);
+    final high = _byteData.getInt32(offset + 4, Endian.little);
+    final isOutsideJavaScriptSafeRange =
+        high > 0x1fffff || high < -0x200000 || (high == -0x200000 && low == 0);
+    if (identical(1, 1.0) && isOutsideJavaScriptSafeRange) {
+      throw UnsupportedError(
+        'Signed 64 bit value is outside the JavaScript exact integer range',
+      );
+    }
+    return high * 0x100000000 + low;
   }
 
   void decodeUnused() {
