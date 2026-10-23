@@ -354,7 +354,14 @@ class _StringSerializer extends _PrimitiveSerializer<String> {
     } else if (wire == 243) {
       final length = stream.decodeNumber().toInt();
       final bytes = stream.readBytes(length);
-      return utf8.decode(bytes);
+      final text = utf8.decode(bytes);
+      // utf8.decode drops one leading byte order mark, but a string value keeps it.
+      final leadingBom =
+          bytes.length >= 3 &&
+          bytes[0] == 0xEF &&
+          bytes[1] == 0xBB &&
+          bytes[2] == 0xBF;
+      return leadingBom ? '\uFEFF$text' : text;
     } else {
       throw ArgumentError('Unexpected wire type for string: $wire');
     }

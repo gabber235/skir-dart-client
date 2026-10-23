@@ -1192,6 +1192,15 @@ void main() {
       }
     });
 
+    test('binary deserialization keeps a leading byte order mark', () {
+      for (final value in ['\uFEFF', '\uFEFFx', '\uFEFF\uFEFFx', 'x\uFEFF']) {
+        final restored = Serializers.string.fromBytes(
+          Serializers.string.toBytes(value),
+        );
+        expect(restored, equals(value), reason: 'Failed roundtrip for $value');
+      }
+    });
+
     test('binary serialization sanitizes lone surrogates to valid UTF-8', () {
       final bytes = Serializers.string.toBytes('\uD800z');
       expect(Serializers.string.fromBytes(bytes), equals('�z'));
